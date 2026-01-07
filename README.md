@@ -1,8 +1,10 @@
 # Pothole Detection System
 
-A Python computer-vision project that processes a video or camera feed, detects potholes with YOLO, estimates relative depth with MiDaS, and stores detections in SQLite. Optional GPS input and a Telegram bot provide location details and alerts.
+A Python computer-vision project that processes a video or camera feed, detects potholes with YOLO, estimates relative depth with MiDaS, and stores detections in SQLite.
 
 This repository is a student-maintained adaptation of an existing project. See [Upstream project and license](#upstream-project-and-license) for attribution.
+
+For an interview-friendly explanation of the project, see [INTERVIEW_GUIDE.md](INTERVIEW_GUIDE.md).
 
 ## Features
 
@@ -10,17 +12,9 @@ This repository is a student-maintained adaptation of an existing project. See [
 - Severity labels based on estimated area and depth
 - Simulated or serial-device GPS input
 - SQLite storage, duplicate-location checks, and offline log retry
-- Optional Telegram bot, Prometheus metrics, and Grafana dashboard
+- Optional Prometheus metrics and Grafana dashboard
 
 ## Screenshots
-
-**System architecture**
-
-![System architecture](assets/images/architecture.png)
-
-**Telegram bot**
-
-![Telegram bot screenshot](assets/images/telegram_bot_screenshot.jpg)
 
 **Monitoring dashboard**
 
@@ -30,13 +24,12 @@ This repository is a student-maintained adaptation of an existing project. See [
 
 - MiDaS estimates relative depth from images. The current conversion is a heuristic, not calibrated measurement of real-world pothole depth.
 - Simulated GPS chooses random coordinates in Serbia and uses the online Nominatim geocoding service. It is for demonstration, not navigation or reporting real pothole locations.
-- Starting the application creates a Telegram bot client, so a valid `BOT_TOKEN` is required even when running the video detector.
+- The current application initializes all configured services at startup. Add any required credentials to your local `.env` file before running it.
 - The full application has not been tested on every camera, operating system, or GPU. Model loading and inference may require additional downloads and substantial disk space.
 
 ## Requirements
 
 - Python 3.10 or newer
-- A Telegram bot token from [@BotFather](https://t.me/BotFather)
 - Internet access for model downloads and simulated GPS geocoding
 - A camera for live input, or the included sample video at `assets/videos/sample_video.mp4`
 
@@ -51,10 +44,9 @@ py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-Copy-Item .env.example .env
 ```
 
-Edit `.env` and provide your Telegram bot token. Set `ADMIN_CHAT_ID` if you want your Telegram account to have admin access. Keep `.env` private; it is excluded from Git.
+The default run does not require a `.env` file or external credentials. To change settings, copy `.env.example` to `.env` and edit the options you need. Keep `.env` private; it is excluded from Git.
 
 Run the application from the project root:
 
@@ -78,13 +70,10 @@ python -m unittest discover -s tests -v
 
 | Setting | Purpose |
 |---|---|
-| `BOT_TOKEN` | Required Telegram bot token |
-| `ADMIN_CHAT_ID` | Telegram chat ID that receives admin privileges |
 | `USE_SIMULATION` | Use simulated GPS when `True`; otherwise try the configured serial GPS |
 | `USE_LIVE_CAMERA` | Read from `CAMERA_INDEX` instead of `VIDEO_FILE` |
 | `VIDEO_FILE` | Input video path when live camera is disabled |
 | `YOLO_MODEL_PATH` | YOLO model weights path |
-| `BOT_ONLY` | Run the bot without loading the computer-vision pipeline |
 | `HEADLESS` | Disable the preview window |
 | `DB_PATH` | SQLite database file path |
 
