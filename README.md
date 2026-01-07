@@ -16,6 +16,10 @@ For an interview-friendly explanation of the project, see [INTERVIEW_GUIDE.md](I
 
 ## Screenshots
 
+**System architecture**
+
+![System architecture](assets/images/architecture.png)
+
 **Monitoring dashboard**
 
 ![Monitoring dashboard](assets/images/monitoring_dashboard.png)
