@@ -1,0 +1,12 @@
+opencv-python
+torch
+torchvision
+ultralytics
+geopy
+pyserial
+numpy
+python-telegram-bot
+python-dotenv
+timm
+prometheus-client
+pandas
