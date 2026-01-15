@@ -67,6 +67,7 @@ def _resolve_existing_or_default(path: str, default_path: str) -> str:
 class Config:
     # Runtime
     BOT_ONLY: bool = _env_bool("BOT_ONLY", False)
+    TELEGRAM_BOT_ENABLED: bool = _env_bool("TELEGRAM_BOT_ENABLED", False)
     HEADLESS: bool = _env_bool("HEADLESS", False)
 
     # GPS
