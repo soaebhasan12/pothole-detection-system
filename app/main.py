@@ -15,7 +15,6 @@ from geopy.geocoders import Nominatim
 
 from config import config
 from database import PotholeDatabase
-from bot import PotholeBot
 from gps_provider import SimulatedGPS, RealGPS
 from utils import save_detection_image
 from prometheus_client import start_http_server, Counter, Summary
@@ -76,7 +75,7 @@ def start_health_server(port: int = 8000):
 class PotholeDetectionSystem:
     def __init__(self):
         self.db = PotholeDatabase()
-        self.bot = PotholeBot(self.db)
+        self.bot = None
         self.running = True
 
         self.detector = None
@@ -92,7 +91,22 @@ class PotholeDetectionSystem:
 
         self.health_server = None
 
+        if config.TELEGRAM_BOT_ENABLED:
+            if not config.BOT_TOKEN:
+                raise ValueError(
+                    "TELEGRAM_BOT_ENABLED is True, but BOT_TOKEN is not set"
+                )
+
+            from bot import PotholeBot
+
+            self.bot = PotholeBot(self.db)
+
         if config.BOT_ONLY:
+            if self.bot is None:
+                raise ValueError(
+                    "BOT_ONLY is True, but TELEGRAM_BOT_ENABLED is False"
+                )
+
             logger.info("BOT_ONLY mode enabled — skipping detector, GPS and CV pipeline")
             self.health_server = start_health_server(8000)
             return
@@ -298,7 +312,8 @@ class PotholeDetectionSystem:
                                 pothole.longitude
                             )
 
-                            self.notification_queue.put(pothole)
+                            if self.bot is not None:
+                                self.notification_queue.put(pothole)
 
                         except Exception as e:
                             logger.error("Database/write error: %s", e)
@@ -348,9 +363,10 @@ class PotholeDetectionSystem:
             while self.running:
                 try:
                     pothole = self.notification_queue.get(timeout=1)
-                    loop.run_until_complete(
-                        self.bot.notify_new_pothole(pothole)
-                    )
+                    if self.bot is not None:
+                        loop.run_until_complete(
+                            self.bot.notify_new_pothole(pothole)
+                        )
                     self.notification_queue.task_done()
 
                 except Empty:
@@ -398,8 +414,7 @@ class PotholeDetectionSystem:
         Full mode:
             - video thread
             - offline sync thread
-            - notification thread
-            - Telegram bot in main thread
+            - optional notification thread and Telegram bot
             - Prometheus metrics server
         """
         if config.BOT_ONLY:
@@ -423,19 +438,23 @@ class PotholeDetectionSystem:
             daemon=True
         )
 
-        notification_thread = threading.Thread(
-            target=self.notification_worker,
-            name="notification-thread",
-            daemon=True
-        )
-
         video_thread.start()
         sync_thread.start()
-        notification_thread.start()
 
         try:
-            logger.info("Starting Telegram bot")
-            self.bot.run()
+            if self.bot is not None:
+                notification_thread = threading.Thread(
+                    target=self.notification_worker,
+                    name="notification-thread",
+                    daemon=True
+                )
+                notification_thread.start()
+
+                logger.info("Starting Telegram bot")
+                self.bot.run()
+            else:
+                logger.info("Telegram bot is disabled; running video detection")
+                video_thread.join()
 
         except KeyboardInterrupt:
             logger.info("Shutdown requested")
