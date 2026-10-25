@@ -18,10 +18,6 @@ This repository is a student-maintained adaptation of an existing project. See [
 
 ![System architecture](assets/images/architecture.png)
 
-**Telegram bot**
-
-![Telegram bot screenshot](assets/images/telegram_bot_screenshot.jpg)
-
 **Monitoring dashboard**
 
 ![Monitoring dashboard](assets/images/monitoring_dashboard.png)
